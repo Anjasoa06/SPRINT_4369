@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd
+
+        http://www.springframework.org/schema/tx
+        https://www.springframework.org/schema/tx/spring-tx.xsd
+
+        http://www.springframework.org/schema/data/jpa
+        https://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+
+    <!-- Détecte les classes @Service -->
+    <context:component-scan
+        base-package="service"
+    />
+
+    <!-- Connexion MySQL -->
+    <bean
+        id="dataSource"
+        class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+
+        <property
+            name="driverClassName"
+            value="com.mysql.cj.jdbc.Driver"
+        />
+
+        <property
+            name="url"
+            value="jdbc:mysql://localhost:3306/db_test"
+        />
+
+        <property
+            name="username"
+            value="root"
+        />
+
+        <property
+            name="password"
+            value=""
+        />
+    </bean>
+
+    <!-- Configuration JPA -->
+    <bean
+        id="entityManagerFactory"
+        class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+
+        <property
+            name="dataSource"
+            ref="dataSource"
+        />
+
+        <!-- Package contenant les @Entity -->
+        <property
+            name="packagesToScan"
+            value="model"
+        />
+
+        <property name="jpaVendorAdapter">
+            <bean
+                class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+
+                <property
+                    name="generateDdl"
+                    value="true"
+                />
+
+                <property
+                    name="showSql"
+                    value="true"
+                />
+            </bean>
+        </property>
+
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.hbm2ddl.auto">
+                    update
+                </prop>
+
+                <prop key="hibernate.format_sql">
+                    true
+                </prop>
+
+                <prop key="hibernate.dialect">
+                    org.hibernate.dialect.MySQLDialect
+                </prop>
+            </props>
+        </property>
+    </bean>
+
+    <!-- Gestionnaire de transactions -->
+    <bean
+        id="transactionManager"
+        class="org.springframework.orm.jpa.JpaTransactionManager">
+
+        <property
+            name="entityManagerFactory"
+            ref="entityManagerFactory"
+        />
+    </bean>
+
+    <!-- Active @Transactional -->
+    <tx:annotation-driven
+        transaction-manager="transactionManager"
+    />
+
+    <!-- Détecte les interfaces JpaRepository -->
+    <jpa:repositories
+        base-package="repository"
+        entity-manager-factory-ref="entityManagerFactory"
+        transaction-manager-ref="transactionManager"
+    />
+
+</beans>

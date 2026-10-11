@@ -1,0 +1,291 @@
+/* ============================================
+   Fichier : style.css
+   Design neutre et élégant
+   ============================================ */
+
+/* ---------- Réinitialisation ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ---------- Corps ---------- */
+body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #2f2f2f;
+    background-color: #f5f4f1;
+    padding: 40px 20px;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+/* ---------- Titres ---------- */
+h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2b2b2b;
+    letter-spacing: 0.5px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #d8d5cf;
+}
+
+h2 {
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #3a3a3a;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #4a4a4a;
+    margin-bottom: 16px;
+}
+
+/* ---------- Liens ---------- */
+a {
+    color: #5a5a5a;
+    text-decoration: none;
+    transition: color 0.25s ease, border-color 0.25s ease;
+    border-bottom: 1px solid transparent;
+}
+
+a:hover {
+    color: #1f1f1f;
+    border-bottom-color: #1f1f1f;
+}
+
+/* Lien de retour */
+.link-hello {
+    display: inline-block;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+    color: #6b6b6b;
+    border-bottom: 1px solid #c4c0b8;
+    padding-bottom: 2px;
+}
+
+.link-hello:hover {
+    color: #2b2b2b;
+    border-bottom-color: #2b2b2b;
+}
+
+/* ---------- Listes ---------- */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    padding: 12px 18px;
+    margin-bottom: 8px;
+    background-color: #ffffff;
+    border: 1px solid #e2dfd9;
+    border-radius: 6px;
+    color: #3a3a3a;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+ul li:hover {
+    background-color: #faf9f7;
+    border-color: #d0ccc4;
+}
+
+/* Liste de navigation (index) */
+body ul li a {
+    display: block;
+    width: 100%;
+    color: #3a3a3a;
+    border-bottom: none;
+}
+
+body ul li a:hover {
+    color: #1f1f1f;
+}
+
+/* ---------- Tableaux ---------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    background-color: #ffffff;
+    border: 1px solid #e2dfd9;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+table th {
+    background-color: #ebe8e2;
+    color: #2b2b2b;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid #d8d5cf;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eeece8;
+    color: #3a3a3a;
+}
+
+table tr:last-child td {
+    border-bottom: none;
+}
+
+table tr:hover td {
+    background-color: #faf9f7;
+}
+
+/* ---------- Formulaires ---------- */
+form {
+    background-color: #ffffff;
+    padding: 32px;
+    border: 1px solid #e2dfd9;
+    border-radius: 8px;
+    max-width: 520px;
+    margin-top: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4a4a4a;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #2f2f2f;
+    background-color: #faf9f7;
+    border: 1px solid #d8d5cf;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+    outline: none;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #8a8a8a;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(138, 138, 138, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* ---------- Boutons ---------- */
+input[type="submit"],
+button {
+    display: inline-block;
+    padding: 11px 28px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    background-color: #4a4a4a;
+    border: 1px solid #4a4a4a;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.1s ease;
+}
+
+input[type="submit"]:hover,
+button:hover {
+    background-color: #2f2f2f;
+    border-color: #2f2f2f;
+}
+
+input[type="submit"]:active,
+button:active {
+    transform: translateY(1px);
+}
+
+input[type="submit"]:focus,
+button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 74, 74, 0.2);
+}
+
+/* ---------- Fiche (fiche.jsp) ---------- */
+body ul li strong {
+    color: #2b2b2b;
+}
+
+/* ---------- Séparateurs ---------- */
+hr {
+    border: none;
+    border-top: 1px solid #e2dfd9;
+    margin: 32px 0;
+}
+
+/* ---------- Conteneur ---------- */
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ---------- Utilitaires ---------- */
+.pt-3 {
+    padding-top: 24px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+    body {
+        padding: 24px 16px;
+        font-size: 15px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+
+    form {
+        padding: 24px 20px;
+    }
+
+    table th,
+    table td {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    input[type="submit"],
+    button {
+        width: 100%;
+        text-align: center;
+    }
+}

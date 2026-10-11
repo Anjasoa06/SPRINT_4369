@@ -1,0 +1,332 @@
+package mg.itu.myframework.controller;
+
+import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Parameter;
+import java.util.*;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.context.WebApplicationContext;
+
+import mg.itu.myframework.annotation.Controller;
+import mg.itu.myframework.annotation.WebApi;
+import mg.itu.myframework.model.MethodClassMapping;
+import mg.itu.myframework.model.UrlMethod;
+import mg.itu.myframework.model.ModelAndView;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Controller
+public class FrontControllerServlet extends HttpServlet {
+
+    private List<String> listController = new ArrayList<>();
+    private Map<UrlMethod, MethodClassMapping> listUrlMapping = new HashMap<>();
+    private String prefix;
+    private String suffix;
+    private ApplicationContext springContext;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void init() throws ServletException {
+        try {
+            ServletContext context = getServletContext();
+
+            this.prefix = (String) context.getAttribute("prefix");
+            this.suffix = (String) context.getAttribute("suffix");
+            this.springContext = (ApplicationContext) context.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+
+            if (this.springContext == null) {
+                this.springContext = (ApplicationContext) context.getAttribute("springContext");
+            }
+
+            List<String> controllersFromContext
+                    = (List<String>) context.getAttribute("listController");
+
+            if (controllersFromContext != null) {
+                this.listController = controllersFromContext;
+            }
+
+            Map<UrlMethod, MethodClassMapping> mappingsFromContext
+                    = (Map<UrlMethod, MethodClassMapping>) context.getAttribute("listUrlMapping");
+
+            if (mappingsFromContext != null) {
+                this.listUrlMapping = mappingsFromContext;
+            }
+
+        } catch (Exception e) {
+            throw new ServletException("Erreur initialisation", e);
+        }
+    }
+
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public String getSuffix() {
+        return suffix;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        processRequest(req, res);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        processRequest(req, res);
+    }
+
+    private void processRequest(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+
+        String uri = req.getRequestURI();
+        String path = uri.substring(req.getContextPath().length());
+
+        String method = req.getMethod();
+
+        MethodClassMapping mapping = getMapping(path, method);
+
+        if (mapping != null) {
+            invokeMethod(mapping, req, res);
+        } else {
+            res.setContentType("text/html");
+            res.setCharacterEncoding("UTF-8");
+
+            PrintWriter out = res.getWriter();
+
+            out.println("URL : " + path + "<br>");
+            out.println("Aucune correspondance trouvée pour l'URL : "
+                    + path + "<br>");
+
+            out.println("<br>Liste des URL disponibles : <br>");
+            out.println("<table border='1'>");
+            out.println("<tr><th>URL</th><th>Classe</th><th>Méthode</th></tr>");
+
+            for (Map.Entry<UrlMethod, MethodClassMapping> entry
+                    : listUrlMapping.entrySet()) {
+
+                UrlMethod url = entry.getKey();
+                MethodClassMapping m = entry.getValue();
+
+                out.println("<tr><td>"
+                        + url.getUrl()
+                        + " (" + url.getMethod() + ")</td><td>");
+
+                out.println(m.getClasse().getName() + "</td><td>");
+
+                out.println(m.getMethode().getName()
+                        + "</td></tr>");
+            }
+
+            out.println("</table>");
+
+            out.println("<br>Liste des classes contrôleurs : <br>");
+
+            for (String controller : listController) {
+                out.println("- " + controller + "<br>");
+            }
+        }
+    }
+
+    private MethodClassMapping getMapping(String urlName, String method) {
+
+        for (Map.Entry<UrlMethod, MethodClassMapping> entry
+                : listUrlMapping.entrySet()) {
+
+            UrlMethod url = entry.getKey();
+
+            if (url.getUrl().equals(urlName)
+                    && url.getMethod().equals(method)) {
+
+                return entry.getValue();
+            }
+        }
+
+        return null;
+    }
+
+    private void invokeMethod(
+            MethodClassMapping mapping,
+            HttpServletRequest req,
+            HttpServletResponse res)
+            throws ServletException, IOException {
+
+        try {
+
+            Object instance
+                    = mapping.getClasse().getDeclaredConstructor().newInstance();
+
+            Parameter[] parameters
+                    = mapping.getMethode().getParameters();
+
+            Object result;
+
+            if (parameters.length == 0) {
+
+                result = mapping.getMethode().invoke(instance);
+
+            } else {
+
+                Object[] args
+                        = getArgs(springContext, parameters, req);
+
+                result
+                        = mapping.getMethode().invoke(instance, args);
+            }
+
+            // WEB API
+            if (mapping.getMethode().isAnnotationPresent(WebApi.class)) {
+
+                res.setContentType("application/json");
+                res.setCharacterEncoding("UTF-8");
+
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                String json
+                        = objectMapper.writeValueAsString(result);
+
+                res.getWriter().println(json);
+
+            } // JSP
+            else if (result instanceof ModelAndView) {
+
+                ModelAndView modelAndView
+                        = (ModelAndView) result;
+
+                for (Map.Entry<String, Object> entry
+                        : modelAndView.getModel().entrySet()) {
+
+                    req.setAttribute(
+                            entry.getKey(),
+                            entry.getValue()
+                    );
+                }
+
+                String viewPath
+                        = getPrefix()
+                        + modelAndView.getView()
+                        + getSuffix();
+
+                req.getRequestDispatcher(viewPath)
+                        .forward(req, res);
+
+            } else {
+
+                res.getWriter().println(
+                        "La méthode "
+                        + mapping.getMethode().getName()
+                        + " ne retourne pas un ModelAndView."
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            if (e instanceof java.lang.reflect.InvocationTargetException) {
+                Throwable cause = e.getCause();
+
+                System.out.println("Erreur dans la méthode appelée : ");
+                System.out.println(cause);
+                cause.printStackTrace();
+            } else {
+                System.out.println("Erreur lors du traitement de la requête : ");
+                System.out.println(e);
+            }
+        }
+    }
+
+    private Object[] getArgs(ApplicationContext springContext, Parameter[] parameters, HttpServletRequest req) {
+        List<Object> args = new ArrayList<>();
+
+        for (Parameter parameter : parameters) {
+            Class<?> parameterType = parameter.getType();
+
+            if (parameterType == ApplicationContext.class) {
+                args.add(springContext);
+                continue;
+            }
+
+            String parameterName = parameter.getName();
+            String parameterValue = req.getParameter(parameterName);
+
+            if (parameterType == String.class
+                    || parameterType == int.class
+                    || parameterType == Integer.class
+                    || parameterType == long.class
+                    || parameterType == Long.class
+                    || parameterType == double.class
+                    || parameterType == Double.class
+                    || parameterType == boolean.class
+                    || parameterType == Boolean.class) {
+
+                args.add(convertParameter(parameterValue, parameterType));
+
+            } else {
+                try {
+                    args.add(createObject(parameterType, req));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return args.toArray();
+    }
+
+    private Object convertParameter(
+            String value,
+            Class<?> targetType) {
+
+        if (targetType == String.class) {
+
+            return value;
+
+        } else if (targetType == int.class
+                || targetType == Integer.class) {
+
+            return Integer.parseInt(value);
+
+        } else if (targetType == long.class
+                || targetType == Long.class) {
+
+            return Long.parseLong(value);
+
+        } else if (targetType == double.class
+                || targetType == Double.class) {
+
+            return Double.parseDouble(value);
+
+        } else if (targetType == boolean.class
+                || targetType == Boolean.class) {
+
+            return Boolean.parseBoolean(value);
+        }
+
+        return null;
+    }
+
+    private Object createObject(Class<?> targetType, HttpServletRequest req) throws Exception {
+        Object object = targetType.getDeclaredConstructor().newInstance();
+
+        Field[] fields = targetType.getDeclaredFields();
+
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            String value = req.getParameter(fieldName);
+
+            if (value != null) {
+                Object convertedValue = convertParameter(value, field.getType());
+
+                field.setAccessible(true);
+                field.set(object, convertedValue);
+            }
+        }
+
+        return object;
+    }
+}
